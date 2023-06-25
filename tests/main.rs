@@ -6,6 +6,8 @@ use std::ptr::{self, NonNull};
 fn main() {
   const A: *const () = null();
   assert_eq!(A, ptr::null());
+  const IS_A_NULL: bool = is_null(&A);
+  assert!(IS_A_NULL);
   const B: *mut () = null();
   assert_eq!(B, ptr::null_mut());
   const C: Option<NonNull<()>> = null();

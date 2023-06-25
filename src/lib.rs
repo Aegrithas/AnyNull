@@ -1,3 +1,6 @@
+#![feature(ptr_metadata)]
+#![feature(const_trait_impl)]
+#![feature(const_ptr_is_null)]
 
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
@@ -5,8 +8,10 @@
 use std::ptr::{self, NonNull};
 use std::rc::{Rc, Weak as WeakRc};
 use std::sync::{Arc, Weak as WeakArc};
+use std::ptr::Thin;
 
 /// Any type that can be some form of null.
+#[const_trait]
 pub trait Nullable {
   
   /// Whatever value of Self means null.
@@ -16,7 +21,7 @@ pub trait Nullable {
   /// For `*mut _`, this is `std::ptr::null_mut()`.
   /// 
   /// See also [`NoneIsNull`]
-  const NULL: Self;
+  fn null() -> Self;
   
   /// Just a null check without relying on [`PartialEq`] (i.e., `ptr == null()`).
   /// 
@@ -25,19 +30,21 @@ pub trait Nullable {
   
 }
 
-/// Conveniently wraps arounnd [`<P as Nullable>::NULL`](Nullable::NULL).
-pub const fn null<P: Nullable>() -> P {
-  P::NULL
+/// Conveniently wraps arounnd [`<P as Nullable>::null()`](Nullable::null).
+pub const fn null<P: ~const Nullable>() -> P {
+  P::null()
 }
 
 /// Wraps around [`<P as Nullable>::is_null(ptr)`](Nullable::is_null)
-pub fn is_null<P: Nullable>(ptr: &P) -> bool {
+pub const fn is_null<P: ~const Nullable>(ptr: &P) -> bool {
   ptr.is_null()
 }
 
-impl<T> Nullable for *const T {
+impl<T: Thin + ?Sized> const Nullable for *const T {
   
-  const NULL: Self = ptr::null();
+  fn null() -> Self {
+    ptr::null()
+  }
   
   fn is_null(&self) -> bool {
     <*const T>::is_null(*self)
@@ -45,9 +52,11 @@ impl<T> Nullable for *const T {
   
 }
 
-impl<T> Nullable for *mut T {
+impl<T: Thin + ?Sized> const Nullable for *mut T {
   
-  const NULL: Self = ptr::null_mut();
+  fn null() -> Self {
+    ptr::null_mut()
+  }
   
   fn is_null(&self) -> bool {
     <*mut T>::is_null(*self)
@@ -55,9 +64,11 @@ impl<T> Nullable for *mut T {
   
 }
 
-impl<T: NoneIsNull> Nullable for Option<T> {
+impl<T: NoneIsNull> const Nullable for Option<T> {
   
-  const NULL: Self = None;
+  fn null() -> Self {
+    None
+  }
   
   fn is_null(&self) -> bool {
     self.is_none()
