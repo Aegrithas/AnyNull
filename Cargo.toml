@@ -2,3 +2,10 @@
 name = "any-null"
 version = "0.1.0"
 edition = "2021"
+authors = ["Aegrithas"]
+description = "A simple Rust utility crate for unifying various \"kinds\" of null."
+licence = "MIT"
+repository = "https://github.com/Aegrithas/AnyNull"
+readme = "README.md"
+categories = []
+keywords = ["null"]
